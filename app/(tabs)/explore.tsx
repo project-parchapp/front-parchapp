@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Alert, Platform, Pressable, StyleSheet } from 'react-native';
 
 import { Collapsible } from '@/components/Collapsible';
 import { ExternalLink } from '@/components/ExternalLink';
@@ -7,8 +8,31 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useSession } from '@/contexts/SessionContext';
+import { syncSeedCatalog } from '@/services/seedSync';
 
 export default function TabTwoScreen() {
+  const { signOut } = useSession();
+  const router = useRouter();
+
+  async function onSyncSeed() {
+    const secret = process.env.EXPO_PUBLIC_SEED_SYNC_SECRET ?? '';
+    if (!secret) {
+      Alert.alert(
+        'Falta configuración',
+        'Define EXPO_PUBLIC_SEED_SYNC_SECRET en .env (mismo valor que SEED_SYNC_SECRET del backend).'
+      );
+      return;
+    }
+    try {
+      const res = await syncSeedCatalog(secret);
+      Alert.alert('Listo', res.message ?? 'Datos de rutas y restaurantes actualizados.');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Error al sincronizar';
+      Alert.alert('Error', message);
+    }
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -21,8 +45,31 @@ export default function TabTwoScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
+        <ThemedText type="title">Explorar</ThemedText>
       </ThemedView>
+
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">Datos de ejemplo</ThemedText>
+        <ThemedText style={styles.cardText}>
+          Carga los CSV del repositorio en staging y ejecuta el procedimiento almacenado en PostgreSQL
+          (rutas, lugares y restaurantes).
+        </ThemedText>
+        <Pressable style={styles.primaryBtn} onPress={() => void onSyncSeed()}>
+          <ThemedText style={styles.primaryBtnText}>Sincronizar rutas y restaurantes</ThemedText>
+        </Pressable>
+      </ThemedView>
+
+      <ThemedView style={styles.card}>
+        <ThemedText type="subtitle">Sesión</ThemedText>
+        <Pressable
+          style={styles.secondaryBtn}
+          onPress={() => {
+            void signOut().then(() => router.replace('/login'));
+          }}>
+          <ThemedText style={styles.secondaryBtnText}>Cerrar sesión</ThemedText>
+        </Pressable>
+      </ThemedView>
+
       <ThemedText>This app includes example code to help you get started.</ThemedText>
       <Collapsible title="File-based routing">
         <ThemedText>
@@ -107,4 +154,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  card: {
+    gap: 8,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#8884',
+  },
+  cardText: { opacity: 0.85 },
+  primaryBtn: {
+    marginTop: 8,
+    backgroundColor: '#2563eb',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  primaryBtnText: { color: '#fff', fontWeight: '600' },
+  secondaryBtn: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#8886',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  secondaryBtnText: { fontWeight: '600' },
 });
