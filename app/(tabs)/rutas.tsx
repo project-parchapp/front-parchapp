@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { CreateRouteModal } from '@/components/routes/CreateRouteModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSession } from '@/contexts/SessionContext';
@@ -24,6 +25,7 @@ export default function RutasScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const fetchRoutes = useCallback(async () => {
     if (!token) return;
@@ -70,9 +72,16 @@ export default function RutasScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
-        Mis rutas
-      </ThemedText>
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.title}>
+          Mis rutas
+        </ThemedText>
+        <Pressable
+          style={styles.newButton}
+          onPress={() => setModalVisible(true)}>
+          <ThemedText style={styles.newButtonText}>Nueva ruta</ThemedText>
+        </Pressable>
+      </View>
 
       {rutas.length === 0 ? (
         <ThemedText style={styles.empty}>
@@ -82,6 +91,7 @@ export default function RutasScreen() {
         <FlatList
           data={rutas}
           keyExtractor={(item) => item.id}
+          style={styles.listFlex}
           contentContainerStyle={styles.list}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -117,6 +127,15 @@ export default function RutasScreen() {
           )}
         />
       )}
+
+      {token ? (
+        <CreateRouteModal
+          visible={modalVisible}
+          token={token}
+          onClose={() => setModalVisible(false)}
+          onCreated={() => void fetchRoutes()}
+        />
+      ) : null}
     </ThemedView>
   );
 }
@@ -124,7 +143,22 @@ export default function RutasScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 60 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
-  title: { marginBottom: 20 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
+  },
+  title: { flex: 1, marginBottom: 0 },
+  newButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  newButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  listFlex: { flex: 1 },
   empty: { opacity: 0.6, marginTop: 40, textAlign: 'center' },
   list: { gap: 12, paddingBottom: 40 },
   card: {

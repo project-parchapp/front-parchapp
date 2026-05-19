@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { AddStopModal } from '@/components/routes/AddStopModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSession } from '@/contexts/SessionContext';
@@ -18,22 +19,29 @@ export default function RutaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { token } = useSession();;
+  const { token } = useSession();
   const router = useRouter();
 
   const [ruta, setRuta] = useState<RouteWithStops | null>(null);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const reloadRoute = useCallback(async () => {
+    if (!token || !id) return;
+    const data = await getRouteById(id, token);
+    setRuta(data);
+  }, [id, token]);
 
   useEffect(() => {
     if (!token || !id) return;
-    getRouteById(id, token)
-      .then(setRuta)
+    setLoading(true);
+    reloadRoute()
       .catch((e: Error) => {
         Alert.alert('Error', e.message);
         router.back();
       })
       .finally(() => setLoading(false));
-  }, [id, token]);
+  }, [id, token, reloadRoute, router]);
 
   if (loading) {
     return (
@@ -67,9 +75,16 @@ export default function RutaDetailScreen() {
           <ThemedText style={styles.meta}>📍 {ruta.status}</ThemedText>
         </View>
 
-        <ThemedText style={styles.sectionTitle}>
-          Paradas ({ruta.stops.length})
-        </ThemedText>
+        <View style={styles.sectionHeader}>
+          <ThemedText style={styles.sectionTitle}>
+            Paradas ({ruta.stops.length})
+          </ThemedText>
+          <Pressable
+            style={styles.addButton}
+            onPress={() => setModalVisible(true)}>
+            <ThemedText style={styles.addButtonText}>+ Agregar parada</ThemedText>
+          </Pressable>
+        </View>
 
         {ruta.stops.length === 0 ? (
           <ThemedText style={styles.empty}>Esta ruta no tiene paradas aún.</ThemedText>
@@ -112,6 +127,21 @@ export default function RutaDetailScreen() {
             ))
         )}
       </ScrollView>
+
+      {token ? (
+        <AddStopModal
+          visible={modalVisible}
+          token={token}
+          routeId={ruta.id}
+          existingStops={ruta.stops}
+          onClose={() => setModalVisible(false)}
+          onCreated={() => {
+            void reloadRoute().catch((e: Error) => {
+              Alert.alert('Error', e.message);
+            });
+          }}
+        />
+      ) : null}
     </ThemedView>
   );
 }
@@ -126,7 +156,22 @@ const styles = StyleSheet.create({
   description: { opacity: 0.7, lineHeight: 22 },
   metaRow: { flexDirection: 'row', gap: 16, marginTop: 4 },
   meta: { fontSize: 13, opacity: 0.6 },
-  sectionTitle: { fontSize: 17, fontWeight: '600', marginTop: 24, marginBottom: 8 },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 8,
+    gap: 12,
+  },
+  sectionTitle: { fontSize: 17, fontWeight: '600', flex: 1 },
+  addButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  addButtonText: { color: '#fff', fontWeight: '600', fontSize: 13 },
   empty: { opacity: 0.5, fontStyle: 'italic' },
   stopCard: {
     borderRadius: 10,

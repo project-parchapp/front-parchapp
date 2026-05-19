@@ -29,6 +29,23 @@ export type RouteStopRow = {
 
 export type RouteWithStops = RouteRow & { stops: RouteStopRow[] };
 
+export type CreateRouteBody = {
+  name: string;
+  description?: string;
+  status?: RouteRow['status'];
+};
+
+export type CreateRouteStopBody = {
+  establishment_id: string;
+  sort_order: number;
+  latitude: string | number;
+  longitude: string | number;
+  estimated_stay_minutes?: number;
+  estimated_travel_minutes_from_prev?: number;
+  service_id?: string | null;
+  note?: string | null;
+};
+
 export async function getRoutes(token: string): Promise<RouteRow[]> {
   return apiFetch<RouteRow[]>('/routes', {
     headers: { Authorization: `Bearer ${token}` },
@@ -38,5 +55,28 @@ export async function getRoutes(token: string): Promise<RouteRow[]> {
 export async function getRouteById(routeId: string, token: string): Promise<RouteWithStops> {
   return apiFetch<RouteWithStops>(`/routes/${routeId}`, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function createRoute(
+  token: string,
+  body: CreateRouteBody
+): Promise<RouteRow> {
+  return apiFetch<RouteRow>('/routes', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    json: body,
+  });
+}
+
+export async function createRouteStop(
+  routeId: string,
+  token: string,
+  body: CreateRouteStopBody
+): Promise<RouteStopRow> {
+  return apiFetch<RouteStopRow>(`/routes/${routeId}/stops`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    json: body,
   });
 }
