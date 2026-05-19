@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   View,
 } from 'react-native';
@@ -22,19 +22,48 @@ export default function RutasScreen() {
 
   const [rutas, setRutas] = useState<RouteRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRoutes = useCallback(async () => {
+    if (!token) return;
+    setError(null);
+    try {
+      const data = await getRoutes(token);
+      setRutas(data);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error desconocido';
+      setError(message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token]);
 
   useEffect(() => {
-    if (!token) return;
-    getRoutes(token)
-      .then(setRutas)
-      .catch((e: Error) => Alert.alert('Error', e.message))
-      .finally(() => setLoading(false));
-  }, [token]);
+    fetchRoutes();
+  }, [fetchRoutes]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchRoutes();
+  }, [fetchRoutes]);
 
   if (loading) {
     return (
       <ThemedView style={styles.centered}>
         <ActivityIndicator size="large" color="#2563eb" />
+      </ThemedView>
+    );
+  }
+
+  if (error) {
+    return (
+      <ThemedView style={styles.centered}>
+        <ThemedText style={styles.errorText}>{error}</ThemedText>
+        <Pressable onPress={onRefresh} style={styles.retryButton}>
+          <ThemedText style={styles.retryText}>Reintentar</ThemedText>
+        </Pressable>
       </ThemedView>
     );
   }
@@ -54,13 +83,16 @@ export default function RutasScreen() {
           data={rutas}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           renderItem={({ item }) => (
             <Pressable
               style={[
                 styles.card,
                 { backgroundColor: isDark ? '#1c1c1e' : '#fff' },
               ]}
-              onPress={() => router.push(`/ruta/${item.id}`)}>
+              onPress={() => router.push(`/rutaDetails/${item.id}`)}>
               <ThemedText style={styles.cardTitle}>{item.name}</ThemedText>
               {item.description ? (
                 <ThemedText style={styles.cardSub} numberOfLines={2}>
@@ -91,7 +123,7 @@ export default function RutasScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 60 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
   title: { marginBottom: 20 },
   empty: { opacity: 0.6, marginTop: 40, textAlign: 'center' },
   list: { gap: 12, paddingBottom: 40 },
@@ -110,4 +142,12 @@ const styles = StyleSheet.create({
   cardMeta: { fontSize: 12, opacity: 0.5 },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
   badgeText: { fontSize: 11, opacity: 0.8 },
+  errorText: { fontSize: 15, opacity: 0.8, textAlign: 'center', paddingHorizontal: 24 },
+  retryButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: { color: '#fff', fontWeight: '600', fontSize: 15 },
 });

@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   TextInput,
 } from 'react-native';
@@ -21,13 +21,30 @@ export default function RestaurantesScreen() {
   const [todos, setTodos] = useState<EstablishmentRow[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchEstablishments = useCallback(async () => {
+    try {
+      const data = await getEstablishments();
+      setTodos(data);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error desconocido';
+      // eslint-disable-next-line no-console
+      console.error(message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    getEstablishments()
-      .then(setTodos)
-      .catch((e: Error) => Alert.alert('Error', e.message))
-      .finally(() => setLoading(false));
-  }, []);
+    fetchEstablishments();
+  }, [fetchEstablishments]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchEstablishments();
+  }, [fetchEstablishments]);
 
   const filtrados = todos.filter((e) => {
     const q = query.toLowerCase();
@@ -73,10 +90,13 @@ export default function RestaurantesScreen() {
           data={filtrados}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           renderItem={({ item }) => (
             <Pressable
               style={[styles.card, { backgroundColor: isDark ? '#1c1c1e' : '#fff' }]}
-              onPress={() => router.push(`/restaurante/${item.id}`)}>
+              onPress={() => router.push(`/restauranteDetails/${item.id}`)}>
               <ThemedText style={styles.cardName}>{item.trade_name}</ThemedText>
               <ThemedText style={styles.cardCity}>
                 📍 {item.city}, {item.country_code}
