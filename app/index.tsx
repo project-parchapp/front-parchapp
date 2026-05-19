@@ -15,7 +15,7 @@ export default function Index() {
   }
 
   if (token) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)/rutas" />;
   }
 
   return <Redirect href="/login" />;
