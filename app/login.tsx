@@ -38,7 +38,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signIn(email.trim(), password);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/rutas');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Error de inicio de sesión';
       Alert.alert('No se pudo iniciar sesión', message);
