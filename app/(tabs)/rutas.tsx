@@ -24,12 +24,12 @@ export default function RutasScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) return;
+    if (!token) return;
     getRoutes(token)
       .then(setRutas)
       .catch((e: Error) => Alert.alert('Error', e.message))
       .finally(() => setLoading(false));
-  }, [session]);
+  }, [token]);
 
   if (loading) {
     return (
