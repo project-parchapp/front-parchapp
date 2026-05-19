@@ -1,10 +1,25 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { apiFetch } from '@/lib/api/client';
 
 const TOKEN_KEY = 'parchapp_token';
 const USER_KEY = 'parchapp_user_json';
+
+// Web-compatible storage helpers
+const getItem = async (key: string): Promise<string | null> => {
+  if (Platform.OS === 'web') return localStorage.getItem(key);
+  return SecureStore.getItemAsync(key);
+};
+const setItem = async (key: string, value: string): Promise<void> => {
+  if (Platform.OS === 'web') { localStorage.setItem(key, value); return; }
+  await SecureStore.setItemAsync(key, value);
+};
+const removeItem = async (key: string): Promise<void> => {
+  if (Platform.OS === 'web') { localStorage.removeItem(key); return; }
+  await SecureStore.deleteItemAsync(key);
+};
 
 export type SessionUser = {
   id: string;
@@ -33,8 +48,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     void (async () => {
       try {
         const [t, u] = await Promise.all([
-          SecureStore.getItemAsync(TOKEN_KEY),
-          SecureStore.getItemAsync(USER_KEY),
+          getItem(TOKEN_KEY),
+          getItem(USER_KEY),
         ]);
         if (cancelled) return;
         setToken(t);
@@ -53,15 +68,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       method: 'POST',
       json: { email, password },
     });
-    await SecureStore.setItemAsync(TOKEN_KEY, res.token);
-    await SecureStore.setItemAsync(USER_KEY, JSON.stringify(res.user));
+    await setItem(TOKEN_KEY, res.token);
+    await setItem(USER_KEY, JSON.stringify(res.user));
     setToken(res.token);
     setUser(res.user);
   }, []);
 
   const signOut = useCallback(async () => {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(USER_KEY);
+    await removeItem(TOKEN_KEY);
+    await removeItem(USER_KEY);
     setToken(null);
     setUser(null);
   }, []);
@@ -83,5 +98,5 @@ export function useSession(): SessionContextValue {
 }
 
 export async function getStoredToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(TOKEN_KEY);
+  return getItem(TOKEN_KEY);
 }
