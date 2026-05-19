@@ -104,7 +104,7 @@ export default function RutaDetailScreen() {
                     </ThemedText>
                   ) : null}
                   <Pressable
-                    onPress={() => router.push(`/restaurante/${stop.establishment_id}`)}>
+                    onPress={() => router.push(`/restauranteDetails/${stop.establishment_id}`)}>
                     <ThemedText style={styles.link}>Ver establecimiento →</ThemedText>
                   </Pressable>
                 </View>
