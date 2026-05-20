@@ -24,6 +24,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false, title: 'Iniciar sesión' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="crearRuta" options={{ presentation: 'modal', title: 'Nuevo viaje', headerShown: true }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

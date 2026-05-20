@@ -21,11 +21,15 @@ export type EstablishmentRow = {
 
 export async function getEstablishments(
   limit = 50,
-  offset = 0
+  offset = 0,
+  filters?: { interest?: string; city?: string }
 ): Promise<EstablishmentRow[]> {
-  return apiFetch<EstablishmentRow[]>(
-    `/establishments?limit=${limit}&offset=${offset}`
-  );
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  params.set('offset', String(offset));
+  if (filters?.interest) params.set('interest', filters.interest);
+  if (filters?.city) params.set('city', filters.city);
+  return apiFetch<EstablishmentRow[]>(`/establishments?${params.toString()}`);
 }
 
 export async function getEstablishmentById(id: string): Promise<EstablishmentRow> {

@@ -40,3 +40,41 @@ export async function getRouteById(routeId: string, token: string): Promise<Rout
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export async function createRoute(
+  token: string,
+  body: { name: string; description?: string; status?: RouteRow['status']; total_estimated_minutes?: number }
+): Promise<RouteRow> {
+  return apiFetch<RouteRow>('/routes', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    json: body,
+  });
+}
+
+export async function createRouteStop(
+  token: string,
+  routeId: string,
+  body: {
+    establishment_id: string;
+    sort_order: number;
+    estimated_travel_minutes_from_prev: number;
+    estimated_stay_minutes?: number;
+    latitude: string;
+    longitude: string;
+    note?: string;
+  }
+): Promise<RouteStopRow> {
+  return apiFetch<RouteStopRow>(`/routes/${routeId}/stops`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    json: body,
+  });
+}
+
+export async function deleteRoute(token: string, routeId: string): Promise<void> {
+  return apiFetch<void>(`/routes/${routeId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
