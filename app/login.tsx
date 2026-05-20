@@ -15,6 +15,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSession } from '@/contexts/SessionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
@@ -38,7 +39,12 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signIn(email.trim(), password);
-      router.replace('/(tabs)/rutas');
+      const saved = await SecureStore.getItemAsync('parchapp_interests');
+if (saved) {
+  router.replace('/(tabs)');
+} else {
+  router.replace('/interests');
+}
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Error de inicio de sesión';
       Alert.alert('No se pudo iniciar sesión', message);
