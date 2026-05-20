@@ -25,6 +25,10 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false, title: 'Iniciar sesión' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="interests" options={{ headerShown: false }} />
+          <Stack.Screen name="misReservas" options={{ headerShown: false, title: 'Mis reservas' }} />
+          <Stack.Screen name="nuevaReserva" options={{ headerShown: false, title: 'Nueva reserva' }} />
+          <Stack.Screen name="crearEvento/[establishmentId]" options={{ headerShown: false }} />
+          <Stack.Screen name="eventoDetails/[serviceId]" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
