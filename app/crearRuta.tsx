@@ -315,7 +315,7 @@ export default function CrearRutaScreen() {
                 contentContainerStyle={styles.estList}
                 ListEmptyComponent={
                   <ThemedText style={styles.emptyText}>
-                    Sin resultados para "{searchQuery}"
+                    Sin resultados para {`"${searchQuery}"`}
                   </ThemedText>
                 }
                 renderItem={({ item }) => {

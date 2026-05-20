@@ -124,12 +124,15 @@ export function AddStopModal({
 
     setLoading(true);
     try {
-      const stop = await createRouteStop(routeId, token, {
+      const sortOrder = nextSortOrder(existingStops);
+      const travelMinutes = sortOrder === 1 ? 0 : 20;
+      const stop = await createRouteStop(token, routeId, {
         establishment_id: selected.id,
-        sort_order: nextSortOrder(existingStops),
+        sort_order: sortOrder,
         latitude: selected.latitude,
         longitude: selected.longitude,
         estimated_stay_minutes: parsed,
+        estimated_travel_minutes_from_prev: travelMinutes,
       });
       onCreated(stop);
       onClose();
