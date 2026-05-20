@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,8 +10,13 @@ import {
 } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useSession } from '@/contexts/SessionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { getEstablishmentById, type EstablishmentRow } from '@/services/establishments';
+import {
+  listEstablishmentEvents,
+  type EstablishmentEventRow,
+} from '@/services/events';
 
 const STATUS_LABEL: Record<EstablishmentRow['status'], string> = {
   active: '✅ Activo',
@@ -20,25 +25,44 @@ const STATUS_LABEL: Record<EstablishmentRow['status'], string> = {
   closed: '🔴 Cerrado',
 };
 
+function formatEventDate(iso: string | null): string {
+  if (!iso) return 'Fecha por confirmar';
+  return new Date(iso).toLocaleString('es-CO', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  });
+}
+
 export default function RestauranteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const router = useRouter();
+  const { user, token } = useSession();
 
   const [lugar, setLugar] = useState<EstablishmentRow | null>(null);
+  const [eventos, setEventos] = useState<EstablishmentEventRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    if (!id) return;
+    const [est, evs] = await Promise.all([
+      getEstablishmentById(id),
+      listEstablishmentEvents(id).catch(() => [] as EstablishmentEventRow[]),
+    ]);
+    setLugar(est);
+    setEventos(evs);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
-    getEstablishmentById(id)
-      .then(setLugar)
+    loadData()
       .catch((e: Error) => {
         Alert.alert('Error', e.message);
         router.back();
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, loadData]);
 
   if (loading) {
     return (
@@ -49,6 +73,8 @@ export default function RestauranteDetailScreen() {
   }
 
   if (!lugar) return null;
+
+  const isOwner = Boolean(user?.id && user.id === lugar.owner_user_id);
 
   return (
     <ThemedView style={styles.container}>
@@ -91,6 +117,36 @@ export default function RestauranteDetailScreen() {
             ) : null}
           </View>
         ) : null}
+
+        <View style={styles.eventsHeader}>
+          <ThemedText style={styles.sectionTitle}>Eventos</ThemedText>
+          {isOwner && token ? (
+            <Pressable
+              style={styles.createEventBtn}
+              onPress={() => router.push(`/crearEvento/${lugar.id}`)}>
+              <ThemedText style={styles.createEventText}>+ Crear evento</ThemedText>
+            </Pressable>
+          ) : null}
+        </View>
+
+        {eventos.length === 0 ? (
+          <ThemedText style={styles.noEvents}>No hay eventos programados</ThemedText>
+        ) : (
+          eventos.map((ev) => (
+            <Pressable
+              key={ev.service_id}
+              style={[styles.eventCard, { backgroundColor: isDark ? '#1c1c1e' : '#f5f5f5' }]}
+              onPress={() => router.push(`/eventoDetails/${ev.service_id}`)}>
+              <ThemedText style={styles.eventTitle}>{ev.title}</ThemedText>
+              <ThemedText style={styles.eventMeta}>
+                {formatEventDate(ev.scheduled_start)}
+              </ThemedText>
+              <ThemedText style={styles.eventMeta}>
+                Cupos: {ev.spots_available} disponibles
+              </ThemedText>
+            </Pressable>
+          ))
+        )}
       </ScrollView>
     </ThemedView>
   );
@@ -110,4 +166,22 @@ const styles = StyleSheet.create({
   sectionTitle: { fontWeight: '600', fontSize: 15, marginBottom: 4 },
   row: { fontSize: 14, opacity: 0.85 },
   coords: { fontSize: 12, opacity: 0.4, marginTop: 2 },
+  eventsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  createEventBtn: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  createEventText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  noEvents: { opacity: 0.6, fontSize: 14 },
+  eventCard: { borderRadius: 12, padding: 14, marginBottom: 10, gap: 4 },
+  eventTitle: { fontWeight: '600', fontSize: 15 },
+  eventMeta: { fontSize: 13, opacity: 0.75 },
 });

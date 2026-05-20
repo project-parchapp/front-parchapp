@@ -10,6 +10,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { CreateRouteModal } from '@/components/routes/CreateRouteModal';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSession } from '@/contexts/SessionContext';
@@ -26,6 +27,7 @@ export default function RutasScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const fetchRoutes = useCallback(async () => {
     if (!token) return;
@@ -103,9 +105,16 @@ export default function RutasScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
-        Mis rutas
-      </ThemedText>
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.title}>
+          Mis rutas
+        </ThemedText>
+        <Pressable
+          style={styles.newButton}
+          onPress={() => setModalVisible(true)}>
+          <ThemedText style={styles.newButtonText}>Nueva ruta</ThemedText>
+        </Pressable>
+      </View>
 
       {rutas.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -174,6 +183,15 @@ export default function RutasScreen() {
           </Pressable>
         </>
       )}
+
+      {token ? (
+        <CreateRouteModal
+          visible={modalVisible}
+          token={token}
+          onClose={() => setModalVisible(false)}
+          onCreated={() => void fetchRoutes()}
+        />
+      ) : null}
     </ThemedView>
   );
 }

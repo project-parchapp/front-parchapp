@@ -29,6 +29,23 @@ export type RouteStopRow = {
 
 export type RouteWithStops = RouteRow & { stops: RouteStopRow[] };
 
+export type CreateRouteBody = {
+  name: string;
+  description?: string;
+  status?: RouteRow['status'];
+};
+
+export type CreateRouteStopBody = {
+  establishment_id: string;
+  sort_order: number;
+  latitude: string | number;
+  longitude: string | number;
+  estimated_stay_minutes?: number;
+  estimated_travel_minutes_from_prev?: number;
+  service_id?: string | null;
+  note?: string | null;
+};
+
 export async function getRoutes(token: string): Promise<RouteRow[]> {
   return apiFetch<RouteRow[]>('/routes', {
     headers: { Authorization: `Bearer ${token}` },

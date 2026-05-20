@@ -21,6 +21,7 @@ const MAPPING = {
   'map.fill': 'map',
   'fork.knife': 'restaurant',
   'gearshape.fill': 'settings',
+  calendar: 'event',
 } as IconMapping;
 
 /**
