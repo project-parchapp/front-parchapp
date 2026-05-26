@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -50,8 +50,8 @@ export default function InterestsScreen() {
       Alert.alert('Selecciona al menos un interés', '');
       return;
     }
-    await SecureStore.setItemAsync(INTERESTS_KEY, JSON.stringify(selected));
-    router.replace('/(tabs)');
+    await AsyncStorage.setItem(INTERESTS_KEY, JSON.stringify(selected));
+    router.replace('/');
   }
 
   if (loading) {

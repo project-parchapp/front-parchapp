@@ -84,7 +84,7 @@ export default function RestaurantesScreen() {
       />
 
       {filtrados.length === 0 ? (
-        <ThemedText style={styles.empty}>Sin resultados para "{query}".</ThemedText>
+        <ThemedText style={styles.empty}>Sin resultados para {`"${query}"`}.</ThemedText>
       ) : (
         <FlatList
           data={filtrados}

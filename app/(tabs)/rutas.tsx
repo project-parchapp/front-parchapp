@@ -212,6 +212,19 @@ const styles = StyleSheet.create({
   },
   createButtonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   list: { gap: 12, paddingBottom: 40 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  newButton: {
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  newButtonText: { color: '#fff', fontWeight: '600', fontSize: 13 },
   card: {
     borderRadius: 12,
     flexDirection: 'row',

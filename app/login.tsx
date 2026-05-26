@@ -15,7 +15,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useSession } from '@/contexts/SessionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
@@ -39,9 +39,9 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await signIn(email.trim(), password);
-      const saved = await SecureStore.getItemAsync('parchapp_interests');
+      const saved = await AsyncStorage.getItem('parchapp_interests');
 if (saved) {
-  router.replace('/(tabs)');
+  router.replace('/');
 } else {
   router.replace('/interests');
 }
